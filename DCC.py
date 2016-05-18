@@ -7,7 +7,7 @@ import time
 
 import utility as ut
 
-# sicheng???>>>
+# hahaha
 class SOCP_DCC:
 
     # the constraints are:
