@@ -27,6 +27,8 @@ class SOCP_DCC:
         self.q = np.transpose(np.transpose(self.w_sol).dot(J).dot(self.H))
         self.rho = np.transpose(self.w_sol).dot(J).dot(self.w_sol)
 
+        print('Qqrho',self.Q,self.q,self.rho)
+
         # cut constraint
 
         self.a = np.transpose(self.H[int_index,:])
@@ -315,7 +317,7 @@ class DCC_class:
 m = Model("qcp")
 
 # Create variables
-N = 3
+N = 2
 x = (np.zeros(N)).tolist()
 t = m.addVar(vtype=GRB.CONTINUOUS,name='t')
 x00 = m.addVar(vtype=GRB.INTEGER,lb = -GRB.INFINITY,name='x00')
