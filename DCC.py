@@ -104,7 +104,10 @@ class SOCP_DCC:
         x_original = self.w_sol+self.H.dot(x_new)
 
         # visualization
-        ut.vis_ellipsoid(constr_group,[DCC_hull.QDCC,DCC_hull.qDCC,DCC_hull.rhoDCC],x_new)
+        ut.vis_ellipsoid(constr_group,\
+        [DCC_hull.QDCC,DCC_hull.qDCC,DCC_hull.rhoDCC],\
+        [self.a,self.alpha,self.beta],
+        x_new)
 
         print('00000000000000',x_original)
 
@@ -385,7 +388,7 @@ c = np.matrix(np.zeros((N+2,1)))
 c[2] = 1.0
 
 
-model = SOCP_DCC(A,b,J,c,1,[-2.0,-1.0])
+model = SOCP_DCC(A,b,J,c,1,[-1.0,-0.0])
 
 
 model.Nullspace_DCC()
