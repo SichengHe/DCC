@@ -27,7 +27,6 @@ class SOCP_DCC:
         self.q = np.transpose(np.transpose(self.w_sol).dot(J).dot(self.H))
         self.rho = np.transpose(self.w_sol).dot(J).dot(self.w_sol)
 
-        print('Qqrho',self.Q,self.q,self.rho)
 
         # cut constraint
 
@@ -103,6 +102,9 @@ class SOCP_DCC:
             i += 1
 
         x_original = self.w_sol+self.H.dot(x_new)
+
+        # visualization
+        ut.vis_ellipsoid(constr_group,[DCC_hull.QDCC,DCC_hull.qDCC,DCC_hull.rhoDCC],x_new)
 
         print('00000000000000',x_original)
 
@@ -235,6 +237,8 @@ class DCC_class:
             self.QDCC = self.Q+self.tau*(self.a).dot(np.transpose(self.a))
             self.qDCC = self.q-self.tau*(self.alpha+self.beta)/2.0*self.a
             self.rhoDCC = self.rho+self.tau*self.alpha*self.beta
+
+        print('self.QDCC,self.qDCC,self.rhoDCC',self.QDCC,self.qDCC,self.rhoDCC)
 
 
     def quad2cone(self):
