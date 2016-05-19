@@ -81,6 +81,15 @@ class SOCP_DCC:
         for v in m.getVars():
             print('%s %g' % (v.varName, v.x))
 
+        x_old = np.zeros((self.pro_size,1))
+        i = 0
+
+        var_all_old = m.getVars()
+        for i in range(self.pro_size):
+            x_old[i,0] =var_all_old[i].x
+            i += 1
+
+
         opt_modelwithN = [m,self.pro_size]
 
         DCC_hull = DCC_class(opt_modelwithN,constr_group,disjunction_group)
@@ -107,7 +116,7 @@ class SOCP_DCC:
         ut.vis_ellipsoid(constr_group,\
         [DCC_hull.QDCC,DCC_hull.qDCC,DCC_hull.rhoDCC],\
         [self.a,self.alpha,self.beta],
-        x_new)
+        x_old,x_new)
 
         print('00000000000000',x_original)
 
