@@ -116,7 +116,7 @@ def contour_quad(quad,obj_coeff,quad2,lin,x_bound,y_bound):
     plt.show()
 
 
-def vis_ellipsoid(ellipsoid,cone,DC,point):
+def vis_ellipsoid(ellipsoid,cone,DC,point_old,point_new):
     # x^T Q x + 2 q^T x +rho
     # = x^T H Lambda H^T x + 2 q^T H H^Tx + rho
     # = y^T Lambda y + 2 q^T H y+rho
@@ -286,8 +286,8 @@ def vis_ellipsoid(ellipsoid,cone,DC,point):
 
 
 
-
-    plt.plot([point[0,0]],[point[1,0]],[point[2,0]],'ro')
+    plt.plot([point_old[0,0]],[point_old[1,0]],[point_old[2,0]],'yo')
+    plt.plot([point_new[0,0]],[point_new[1,0]],[point_new[2,0]],'ro')
 
 
 
