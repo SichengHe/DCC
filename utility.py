@@ -52,13 +52,9 @@ def contour_quad(quad,obj_coeff,quad2,lin,x_bound,y_bound):
     q = quad[1]
     rho = quad[2]
 
-    print('+++++++++++++',Q,q,rho)
-
     QDCC = quad2[0]
     qDCC = quad2[1]
     rhoDCC = quad2[2]
-
-    print('pppppppppppp',QDCC,qDCC,rhoDCC)
 
     a = lin[0]
     alpha = lin[1]
@@ -120,7 +116,7 @@ def contour_quad(quad,obj_coeff,quad2,lin,x_bound,y_bound):
     plt.show()
 
 
-def vis_ellipsoid(ellipsoid,cone,point):
+def vis_ellipsoid(ellipsoid,cone,DC,point):
     # x^T Q x + 2 q^T x +rho
     # = x^T H Lambda H^T x + 2 q^T H H^Tx + rho
     # = y^T Lambda y + 2 q^T H y+rho
@@ -157,7 +153,6 @@ def vis_ellipsoid(ellipsoid,cone,point):
 
     s_vec = np.transpose(axis_dir).dot(q)
     rho_norm = -(rho-s_vec[0]**2/Lambda[0]-s_vec[1]**2/Lambda[1]-s_vec[2]**2/Lambda[2])
-    print('s_vec,rho_norm',s_vec,rho_norm)
 
     r1 = Lambda[0]/rho_norm
     r2 = Lambda[1]/rho_norm
@@ -266,18 +261,34 @@ def vis_ellipsoid(ellipsoid,cone,point):
     Y2_org = X2*v1[1,0]+Y*v2[1,0]+Z*v3[1,0]
     Z2_org = X2*v1[2,0]+Y*v2[2,0]+Z*v3[2,0]
 
-    # check
-    x_test_vec = np.matrix([[X_org[10,10]],[Y_org[10,10]],[Z_org[10,10]]])
-    print('test!!!',np.transpose(x_test_vec).dot(QDCC).dot(x_test_vec)+2.0*np.transpose(qDCC).dot(x_test_vec)+rhoDCC)
-    x_test_vec = np.matrix([[X_org[0,0]],[Y_org[0,0]],[Z_org[0,0]]])
-    print('test!!!',np.transpose(x_test_vec).dot(QDCC).dot(x_test_vec)+2.0*np.transpose(qDCC).dot(x_test_vec)+rhoDCC)
-
-    # Set the Z values outside your range to NaNs so they aren't plotted
 
     ax.plot_wireframe(X_org, Y_org, Z_org)
     ax.plot_wireframe(X2_org, Y2_org, Z2_org)
 
+    # disjunctive
+    a = DC[0]
+    alpha = DC[1]
+    beta = DC[2]
+
+    xx, yy = np.meshgrid(np.linspace(-10.0,10.0,10), np.linspace(-10.0,10.0,10))
+
+    # calculate corresponding z
+    z1 = (-a[0,0] * xx - a[1,0] * yy + alpha) * 1. /a[2,0]
+    z2 = (-a[0,0] * xx - a[1,0] * yy + beta) * 1. /a[2,0]
+
+    # plot the surface
+    f1 = ax.plot_surface(xx, yy, z1)
+    f2 = ax.plot_surface(xx, yy, z2)
+
+    coeff = 0.5
+    f1.set_facecolor((0, 0, 1, coeff))
+    f2.set_facecolor((0, 0, 1, coeff))
+
+
+
+
     plt.plot([point[0,0]],[point[1,0]],[point[2,0]],'ro')
+
 
 
     plt.show()
