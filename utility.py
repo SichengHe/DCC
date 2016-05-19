@@ -3,6 +3,8 @@ import numpy as np
 import scipy as sp
 import math
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import axes3d
+
 
 def nullspace(A, atol=1e-13, rtol=0):
     """Compute an approximate basis for the nullspace of A.
@@ -118,25 +120,25 @@ def contour_quad(quad,obj_coeff,quad2,lin,x_bound,y_bound):
     plt.show()
 
 
-def vis_ellipsoid(ellipsoid):
-# x^T Q x + 2 q^T x +rho
-# = x^T H Lambda H^T x + 2 q^T H H^Tx + rho
-# = y^T Lambda y + 2 q^T H y+rho
-# = y^T Lambda y + 2 s^T y+rho
-# = lambda1*y1**2+lambda2*y2**2+lambda3*y3**2+2*s1*y1+2*s2*y2+2*s3*y3+rho
-# = lambda1*(y1**2+2*s1/lambda1*y1+(s1/lambda1)**2)
-# +lambda2*(y2**2+2*s2/lambda2*y2+(s2/lambda2)**2)
-# +lambda3*(y3**2+2*s3/lambda3*y3+(s3/lambda3)**2)
-# +(rho-s1**2/lambda1-s2**2/lambda2-s3**2/lambda3)=0
-#
-# lambda1*(y1**2+2*s1/lambda1*y1+(s1/lambda1)**2)
-# +lambda2*(y2**2+2*s2/lambda2*y2+(s2/lambda2)**2)
-# +lambda3*(y3**2+2*s3/lambda3*y3+(s3/lambda3)**2)=
-# -(rho-s1**2/lambda1-s2**2/lambda2-s3**2/lambda3):=rho_norm
-#
-# lambda1/rho_norm*(y1+(s1/lambda1))**2
-# +lambda2/rho_norm*(y2+(s2/lambda2))**2
-# +lambda2/rho_norm*(y3+(s3/lambda3))**2=1
+def vis_ellipsoid(ellipsoid,cone,point):
+    # x^T Q x + 2 q^T x +rho
+    # = x^T H Lambda H^T x + 2 q^T H H^Tx + rho
+    # = y^T Lambda y + 2 q^T H y+rho
+    # = y^T Lambda y + 2 s^T y+rho
+    # = lambda1*y1**2+lambda2*y2**2+lambda3*y3**2+2*s1*y1+2*s2*y2+2*s3*y3+rho
+    # = lambda1*(y1**2+2*s1/lambda1*y1+(s1/lambda1)**2)
+    # +lambda2*(y2**2+2*s2/lambda2*y2+(s2/lambda2)**2)
+    # +lambda3*(y3**2+2*s3/lambda3*y3+(s3/lambda3)**2)
+    # +(rho-s1**2/lambda1-s2**2/lambda2-s3**2/lambda3)=0
+    #
+    # lambda1*(y1**2+2*s1/lambda1*y1+(s1/lambda1)**2)
+    # +lambda2*(y2**2+2*s2/lambda2*y2+(s2/lambda2)**2)
+    # +lambda3*(y3**2+2*s3/lambda3*y3+(s3/lambda3)**2)=
+    # -(rho-s1**2/lambda1-s2**2/lambda2-s3**2/lambda3):=rho_norm
+    #
+    # lambda1/rho_norm*(y1+(s1/lambda1))**2
+    # +lambda2/rho_norm*(y2+(s2/lambda2))**2
+    # +lambda2/rho_norm*(y3+(s3/lambda3))**2=1
 
 
 
@@ -188,26 +190,94 @@ def vis_ellipsoid(ellipsoid):
     y = y+shift_y
     z = z+shift_z
 
-    print(';;;;;;shift_x',shift_x,shift_y,shift_z)
-
     x_org = x*v1[0,0]+y*v2[0,0]+z*v3[0,0]
     y_org = x*v1[1,0]+y*v2[1,0]+z*v3[1,0]
     z_org = x*v1[2,0]+y*v2[2,0]+z*v3[2,0]
 
-    x_test_vec = np.matrix([[x_org[50,50]],[y_org[50,50]],[z_org[50,50]]])
-    print('test!!!',np.transpose(x_test_vec).dot(Q).dot(x_test_vec)+2.0*np.transpose(q).dot(x_test_vec)+rho)
-    x_test_vec = np.matrix([[x_org[10,10]],[y_org[10,10]],[z_org[10,10]]])
-    print('test!!!',np.transpose(x_test_vec).dot(Q).dot(x_test_vec)+2.0*np.transpose(q).dot(x_test_vec)+rho)
-    x_test_vec = np.matrix([[x_org[0,0]],[y_org[0,0]],[z_org[0,0]]])
-    print('test!!!',np.transpose(x_test_vec).dot(Q).dot(x_test_vec)+2.0*np.transpose(q).dot(x_test_vec)+rho)
-
     # Plot:
-    ax.plot_surface(x, y, z,  rstride=4, cstride=4, color='r')
     ax.plot_surface(x_org, y_org, z_org,  rstride=4, cstride=4, color='b')
 
     # Adjustment of the axes, so that they all have the same span:
     max_radius = max(rx, ry, rz)
     for axis in 'xyz':
         getattr(ax, 'set_{}lim'.format(axis))((-max_radius, max_radius))
+
+    ############ cone
+    # x^T Q x + 2 q^T x + rho <=0
+    # x^T H Lambda H^T x + 2q^T x +rho <=0
+    # x^T H Lambda H^T x + 2q^T H H^T x +rho <=0
+    # y^T Lambda y + 2 q^T H y +rho<=0
+    # y^T Lambda y + 2 s^T y +rho<=0
+    # lambda_2*y_2**2+lambda_3*y_3**3+2*s_2*y_2+2*s_3*y_3+rho<=-lambda_1*y_1**2-2*s_1*y_1
+    # lambda_2*(y_2**2+2*s_2/lambda_2 y_2+(s_2/lambda_2)**2)
+    #+lambda_3*(y_3**2+2*s_3/lambda_3 y_3+(s_3/lambda_3)**2)
+    #+(rho-s_2**2/lambda_2-s_3**2/lambda_3-s_1**2/lambda_1)
+    #<=-lambda_1*(y_1**2+2*s_1/lambda_1*y_1+(s_1/lambda_1)**2)
+
+    # lambda_2*(y_2+(s_2/lambda_2))**2
+    #+lambda_3*(y_3+(s_3/lambda_3))**2
+    #<=-lambda_1*(y_1+(s_1/lambda_1))**2
+    QDCC = cone[0]
+    qDCC = cone[1]
+    rhoDCC = cone[2]
+
+    [eig_val_vec,eig_vec_mat] = np.linalg.eig(QDCC)
+    v1 = eig_vec_mat[:,0]
+    v2 = eig_vec_mat[:,1]
+    v3 = np.transpose(np.cross(np.transpose(v1),np.transpose(v2)))
+    eig_vec_mat[:,2] = v3
+
+    s_vec = np.transpose(eig_vec_mat).dot(qDCC)
+
+
+    r2 = np.sqrt(eig_val_vec[1]/(-eig_val_vec[0]))
+    r3 = np.sqrt(eig_val_vec[2]/(-eig_val_vec[0]))
+
+    shift_x = -s_vec[0]/eig_val_vec[0]
+    shift_y = -s_vec[1]/eig_val_vec[1]
+    shift_z = -s_vec[2]/eig_val_vec[2]
+
+
+
+    # Set up the grid in polar
+    theta = np.linspace(0,2*np.pi,50)
+    r = np.linspace(0,50,50)
+    T, R = np.meshgrid(theta, r)
+
+    # Then calculate X, Y, and Z
+    Y = R * np.cos(T)
+    Z = R * np.sin(T)
+    X = np.sqrt(Y**2 + Z**2)
+    X2 = -X
+
+    Y = Y/r2
+    Z = Z/r3
+
+    X = X+shift_x
+    X2 = X2+shift_x
+    Y = Y+shift_y
+    Z = Z+shift_z
+
+    X_org = X*v1[0,0]+Y*v2[0,0]+Z*v3[0,0]
+    Y_org = X*v1[1,0]+Y*v2[1,0]+Z*v3[1,0]
+    Z_org = X*v1[2,0]+Y*v2[2,0]+Z*v3[2,0]
+
+    X2_org = X2*v1[0,0]+Y*v2[0,0]+Z*v3[0,0]
+    Y2_org = X2*v1[1,0]+Y*v2[1,0]+Z*v3[1,0]
+    Z2_org = X2*v1[2,0]+Y*v2[2,0]+Z*v3[2,0]
+
+    # check
+    x_test_vec = np.matrix([[X_org[10,10]],[Y_org[10,10]],[Z_org[10,10]]])
+    print('test!!!',np.transpose(x_test_vec).dot(QDCC).dot(x_test_vec)+2.0*np.transpose(qDCC).dot(x_test_vec)+rhoDCC)
+    x_test_vec = np.matrix([[X_org[0,0]],[Y_org[0,0]],[Z_org[0,0]]])
+    print('test!!!',np.transpose(x_test_vec).dot(QDCC).dot(x_test_vec)+2.0*np.transpose(qDCC).dot(x_test_vec)+rhoDCC)
+
+    # Set the Z values outside your range to NaNs so they aren't plotted
+
+    ax.plot_wireframe(X_org, Y_org, Z_org)
+    ax.plot_wireframe(X2_org, Y2_org, Z2_org)
+
+    plt.plot([point[0,0]],[point[1,0]],[point[2,0]],'ro')
+
 
     plt.show()
