@@ -261,9 +261,12 @@ def vis_ellipsoid(ellipsoid,cone,DC,point_old,point_new):
     Y2_org = X2*v1[1,0]+Y*v2[1,0]+Z*v3[1,0]
     Z2_org = X2*v1[2,0]+Y*v2[2,0]+Z*v3[2,0]
 
+    f_DCC_1 = ax.plot_surface(X_org, Y_org, Z_org,  rstride=4, cstride=4, color='b')
+    f_DCC_2 = ax.plot_surface(X2_org, Y2_org, Z2_org,  rstride=4, cstride=4, color='b')
 
-    ax.plot_wireframe(X_org, Y_org, Z_org)
-    ax.plot_wireframe(X2_org, Y2_org, Z2_org)
+    coeff = 0.5
+    f_DCC_1.set_facecolor((0, 0, 1, coeff))
+    f_DCC_2.set_facecolor((0, 0, 1, coeff))
 
     # disjunctive
     a = DC[0]
