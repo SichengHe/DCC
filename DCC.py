@@ -14,10 +14,13 @@ class SOCP_DCC:
     # Ax=b
     # x^TJx<=0
 
-    def __init__(self,A,b,J,c,int_index,lb_ub):
+    def __init__(self,A,b,J,c,int_index):
+
+        # construct the problem in the null space of linear constraints
 
         # quad constraint
 
+        self.int_index = int_index
         self.H = ut.nullspace(A)
 
         x = np.linalg.lstsq(A, b)
@@ -32,12 +35,6 @@ class SOCP_DCC:
 
         self.a = np.transpose(self.H[int_index,:])
 
-        lb = lb_ub[0]
-        ub = lb_ub[1]
-
-        self.alpha = (ub-self.w_sol[int_index])[0,0]
-        self.beta = (lb-self.w_sol[int_index])[0,0]
-
         self.pro_size_orig = len(A[0,:])
         self.pro_size = len(self.q)
 
@@ -51,8 +48,9 @@ class SOCP_DCC:
 
     def Nullspace_DCC(self):
 
+        # solve the original relaxed problem in null space
+
         constr_group = [self.Q,self.q,self.rho]
-        disjunction_group = [self.a,self.alpha,self.beta]
 
         m = Model("qcp")
 
@@ -75,9 +73,12 @@ class SOCP_DCC:
             sum_x += 2.0*self.q[i]*x[i]
         sum_x += self.rho
 
+        print('==========',self.Q)
         m.addQConstr(sum_x<=0.0)
 
         m.optimize()
+
+        # solve for alpha and beta
         for v in m.getVars():
             print('%s %g' % (v.varName, v.x))
 
@@ -89,6 +90,22 @@ class SOCP_DCC:
             x_old[i,0] =var_all_old[i].x
             i += 1
 
+        x_old_original = self.w_sol+self.H.dot(x_old)
+
+        lb = np.floor(x_old_original[self.int_index])
+        ub = np.ceil(x_old_original[self.int_index])
+
+        self.alpha = (ub-self.w_sol[self.int_index])[0,0]
+        self.beta = (lb-self.w_sol[self.int_index])[0,0]
+
+        # construct the disjunctive cuts
+        disjunction_group = [self.a,self.alpha,self.beta]
+
+
+
+
+
+        # add the DCC with the original problem
 
         opt_modelwithN = [m,self.pro_size]
 
@@ -110,7 +127,7 @@ class SOCP_DCC:
             x_new[i,0] =var_all_new[i].x
             i += 1
 
-        x_original = self.w_sol+self.H.dot(x_new)
+        x_original_new = self.w_sol+self.H.dot(x_new)
 
         # visualization
         ut.vis_ellipsoid(constr_group,\
@@ -118,7 +135,7 @@ class SOCP_DCC:
         [self.a,self.alpha,self.beta],
         x_old,x_new)
 
-        print('00000000000000',x_original)
+        print('00000000000000',x_original_new)
 
 
 
@@ -128,14 +145,6 @@ class SOCP_DCC:
         # [DCC_hull.QDCC,DCC_hull.qDCC,DCC_hull.rhoDCC],\
         # [self.a,self.alpha,self.beta],\
         # [-5.0,5.0],[-5.0,5.0])
-
-
-
-
-
-
-
-
 
 
 
@@ -329,58 +338,58 @@ class DCC_class:
 
 
 
-# Create a new model
-m = Model("qcp")
-
-# Create variables
-N = 2
-x = (np.zeros(N)).tolist()
-t = m.addVar(vtype=GRB.CONTINUOUS,name='t')
-x00 = m.addVar(vtype=GRB.INTEGER,lb = -GRB.INFINITY,name='x00')
-for i in range(N):
-    x[i] = m.addVar(vtype=GRB.CONTINUOUS,lb = -GRB.INFINITY,name='x%i' %i)
-
-# Integrate new variables
-m.update()
-
-# Set objective: x
-obj = 0.0
-obj = x[0]
-m.setObjective(obj, GRB.MAXIMIZE)
-
-# set constraitns
-lin_LHS = 0.0
-lin_LHS += 2.0*t+x00
-for i in range(N):
-    lin_LHS += x[i]
-m.addConstr(lin_LHS==14.0/3.0-4.0/3.0-1.0)
-
-quad_LHS = 0.0
-quad_LHS += x00*x00
-for i in range(N):
-    quad_LHS += x[i]*x[i]
-m.addQConstr(quad_LHS<=t*t)
-
-# optimize
-default_start = time.time()
-m.optimize()
-default_end = time.time()
-default_duration = default_end-default_start
-
-for v in m.getVars():
-    print('%s %g' % (v.varName, v.x))
-print('default_duration',default_duration)
-
-
-
-
-
-
-
-
-
-
+# # Create a new model
+# m = Model("qcp")
 #
+# # Create variables
+N = 2
+# x = (np.zeros(N)).tolist()
+# t = m.addVar(vtype=GRB.CONTINUOUS,name='t')
+# x00 = m.addVar(vtype=GRB.INTEGER,lb = -GRB.INFINITY,name='x00')
+# for i in range(N):
+#     x[i] = m.addVar(vtype=GRB.CONTINUOUS,lb = -GRB.INFINITY,name='x%i' %i)
+#
+# m.update()
+#
+# # Set objective: x
+# obj = 0.0
+# obj = x[0]
+# m.setObjective(obj, GRB.MAXIMIZE)
+#
+# # set constraitns
+# lin_LHS = 0.0
+# lin_LHS += 2.0*t+x00
+# for i in range(N):
+#     lin_LHS += x[i]
+# m.addConstr(lin_LHS==14.0/3.0-4.0/3.0-1.0)
+#
+# quad_LHS = 0.0
+# quad_LHS += x00*x00
+# for i in range(N):
+#     quad_LHS += x[i]*x[i]
+# m.addQConstr(quad_LHS<=t*t)
+#
+# # optimize
+# default_start = time.time()
+# m.optimize()
+# default_end = time.time()
+# default_duration = default_end-default_start
+#
+# for v in m.getVars():
+#     print('%s %g' % (v.varName, v.x))
+# print('default_duration',default_duration)
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+# #
+
 A = np.matrix(np.zeros((1,N+2)))
 for i in range(N+2):
     A[0,i] = 1.0
@@ -397,7 +406,7 @@ c = np.matrix(np.zeros((N+2,1)))
 c[2] = 1.0
 
 
-model = SOCP_DCC(A,b,J,c,1,[-1.0,-0.0])
+model = SOCP_DCC(A,b,J,c,1)
 
 
 model.Nullspace_DCC()
